@@ -1,7 +1,0 @@
-{
-  "name": "Gestione Attività PWA",
-  "description": "Una Progressive Web App per gestire ordini, spese e scorte di magazzino, ottimizzata per l'uso su tablet e dispositivi mobili. Tutti i dati vengono salvati localmente sul dispositivo.",
-  "requestFramePermissions": [
-    "camera"
-  ]
-}
