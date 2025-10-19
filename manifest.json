@@ -1,0 +1,23 @@
+
+{
+  "short_name": "Gestione",
+  "name": "Gestione Attività",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f1f5f9",
+  "theme_color": "#ffffff",
+  "description": "App per la gestione di ordini, spese e scorte.",
+  "icons": [
+    {
+      "src": "https://picsum.photos/192",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://picsum.photos/512",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
