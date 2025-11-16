@@ -1,0 +1,35 @@
+// 🔐 FIREBASE SECURITY RULES - BASE (Solo utenti autenticati)
+//
+// COME APPLICARE:
+// 1. Vai a: https://console.firebase.google.com/project/business-manager-pro-8a727/firestore/rules
+// 2. Copia TUTTO il codice qui sotto
+// 3. Incollalo nell'editor (sostituisce tutto)
+// 4. Click "Pubblica" (Publish)
+// 5. Conferma
+//
+// COSA FANNO QUESTE REGOLE:
+// ✅ Solo utenti autenticati (con login) possono leggere/scrivere
+// ✅ Utenti non autenticati: BLOCCATI
+// ✅ Semplice e sicuro
+//
+// NOTA: Tutti gli utenti autenticati vedono tutti i dati.
+//       Per separazione dati per utente, serve migrazione userId (opzione avanzata).
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Regola base: richiede autenticazione per tutto
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+  }
+}
+
+// ✅ FATTO! Semplice e efficace.
+//
+// Dopo aver applicato queste regole:
+// - Solo chi fa login può usare l'app
+// - Utenti non loggati: bloccati
+// - Dati protetti da accessi esterni

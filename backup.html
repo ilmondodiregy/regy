@@ -1,0 +1,31 @@
+// 🔐 BACKUP FIREBASE - Esegui dalla Console
+(async function() {
+    console.log('🚀 Inizio backup...');
+    
+    const collections = ['orders', 'expenses', 'stockMovements', 'customersArchive', 'articlesArchive'];
+    const backup = {
+        timestamp: new Date().toISOString(),
+        collections: {}
+    };
+    
+    for (const collName of collections) {
+        console.log(`📦 Backup ${collName}...`);
+        const snapshot = await db.collection(collName).get();
+        const docs = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        backup.collections[collName] = docs;
+        console.log(`   ✅ ${docs.length} documenti`);
+    }
+    
+    // Download
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `firebase_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    
+    console.log('✅ BACKUP COMPLETATO! File scaricato.');
+})();

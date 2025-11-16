@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>🔐 Backup Firebase - ESEGUI PRIMA DELLA MIGRAZIONE</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 40px;
+            background: #0a0a0a;
+            color: #00ff00;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            padding: 30px;
+            border: 3px solid #00ff00;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,255,0,0.3);
+        }
+        h1 {
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 20px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #00cc00;
+            box-shadow: 0 0 20px rgba(0,255,0,0.5);
+        }
+        button:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+        .success {
+            background: #003300;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .warning {
+            background: #331100;
+            border: 2px solid #ff6600;
+            color: #ff9900;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        #status {
+            background: #0a0a0a;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #00ff00;
+            min-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .log-success { color: #00ff00; }
+        .log-error { color: #ff0000; }
+        .log-info { color: #00aaff; }
+        .log-warning { color: #ffaa00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 BACKUP COMPLETO FIREBASE</h1>
+
+        <div class="warning">
+            <h3>⚠️ IMPORTANTE - ESEGUIRE PRIMA DELLA MIGRAZIONE</h3>
+            <p>Questo script scarica TUTTI i dati da Firebase e li salva come file JSON.</p>
+            <p><strong>QUANDO USARE:</strong></p>
+            <ul>
+                <li>✅ PRIMA di eseguire qualsiasi migrazione</li>
+                <li>✅ PRIMA di applicare Security Rules</li>
+                <li>✅ PRIMA di modifiche massive ai dati</li>
+                <li>✅ Periodicamente (una volta a settimana)</li>
+            </ul>
+        </div>
+
+        <div id="auth-status" style="padding: 20px; margin: 20px 0; border: 1px solid #00ff00;">
+            <h3>Stato Autenticazione:</h3>
+            <div id="user-info">⏳ Caricamento...</div>
+        </div>
+
+        <div style="margin: 30px 0;">
+            <button id="btnBackup" disabled onclick="runBackup()">
+                💾 SCARICA BACKUP COMPLETO
+            </button>
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDEa6a3wvZ_-fswrwPf6mLYN4vUYJ8gJMg",
+            authDomain: "business-manager-pro-8a727.firebaseapp.com",
+            projectId: "business-manager-pro-8a727",
+            storageBucket: "business-manager-pro-8a727.firebasestorage.app",
+            messagingSenderId: "433813286926",
+            appId: "1:433813286926:web:15d8a96f65999e56cdc3a3"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        let currentUser = null;
+
+        // Logging
+        function log(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const entry = document.createElement('div');
+            entry.className = `log-${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            statusDiv.appendChild(entry);
+            statusDiv.scrollTop = statusDiv.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // Auth
+        auth.onAuthStateChanged(user => {
+            const userInfo = document.getElementById('user-info');
+            const btnBackup = document.getElementById('btnBackup');
+
+            if (user) {
+                currentUser = user;
+                userInfo.innerHTML = `
+                    ✅ Loggato come: <strong>${user.email}</strong><br>
+                    User ID: <code>${user.uid}</code>
+                `;
+                btnBackup.disabled = false;
+                log(`✅ Autenticato come: ${user.email}`, 'success');
+            } else {
+                userInfo.innerHTML = '❌ Non loggato. Apri l\'app principale e torna qui.';
+                btnBackup.disabled = true;
+                log('❌ Autenticazione richiesta', 'error');
+            }
+        });
+
+        // Download file
+        function downloadJSON(data, filename) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Backup function
+        async function runBackup() {
+            if (!currentUser) {
+                alert('Devi essere loggato!');
+                return;
+            }
+
+            const confirmed = confirm(
+                '🔐 BACKUP COMPLETO\n\n' +
+                'Verranno scaricati TUTTI i dati da Firebase.\n' +
+                'Procedere?'
+            );
+
+            if (!confirmed) {
+                log('⏹️  Backup annullato', 'warning');
+                return;
+            }
+
+            log('🚀 INIZIO BACKUP COMPLETO...', 'info');
+            document.getElementById('btnBackup').disabled = true;
+
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+            const collections = ['orders', 'expenses', 'stockMovements', 'customersArchive', 'articlesArchive', 'trash', 'settings'];
+
+            const backup = {
+                timestamp: new Date().toISOString(),
+                user: {
+                    email: currentUser.email,
+                    uid: currentUser.uid
+                },
+                collections: {}
+            };
+
+            let totalDocs = 0;
+
+            for (const collName of collections) {
+                log(`📦 Backup collezione: ${collName}...`, 'info');
+
+                try {
+                    const snapshot = await db.collection(collName).get();
+                    const docs = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        // Convert Firestore timestamps to ISO strings
+                        createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || doc.data().createdAt,
+                        updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || doc.data().updatedAt
+                    }));
+
+                    backup.collections[collName] = docs;
+                    totalDocs += docs.length;
+
+                    log(`   ✅ ${collName}: ${docs.length} documenti salvati`, 'success');
+
+                    // Download individual collection
+                    downloadJSON(docs, `${collName}_backup_${timestamp}.json`);
+
+                } catch (error) {
+                    log(`   ❌ Errore su ${collName}: ${error.message}`, 'error');
+                    backup.collections[collName] = { error: error.message };
+                }
+            }
+
+            // Download complete backup
+            downloadJSON(backup, `firebase_complete_backup_${timestamp}.json`);
+
+            log('\n' + '='.repeat(60), 'info');
+            log('✅ BACKUP COMPLETATO!', 'success');
+            log(`📊 Totale documenti: ${totalDocs}`, 'success');
+            log(`📁 File scaricati: ${collections.length + 1}`, 'success');
+            log('='.repeat(60), 'info');
+            log('', 'info');
+            log('💾 File salvati nella cartella Downloads:', 'info');
+            log(`   - firebase_complete_backup_${timestamp}.json (tutto insieme)`, 'info');
+            collections.forEach(c => {
+                log(`   - ${c}_backup_${timestamp}.json`, 'info');
+            });
+            log('', 'info');
+            log('🔒 CONSERVA QUESTI FILE IN UN POSTO SICURO!', 'warning');
+
+            document.getElementById('btnBackup').disabled = false;
+        }
+
+        log('💾 Script di backup caricato', 'success');
+        log('⏳ Aspettando autenticazione...', 'info');
+    </script>
+</body>
+</html>
