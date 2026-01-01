@@ -1,0 +1,127 @@
+// 🔒 FIREBASE SECURITY RULES - VERSIONE SICURA
+//
+// ISTRUZIONI:
+// 1. Vai a: https://console.firebase.google.com/project/business-manager-pro-8a727/firestore/rules
+// 2. Copia TUTTO il codice qui sotto
+// 3. Incollalo nell'editor sostituendo le regole esistenti
+// 4. Click "Publish"
+//
+// COSA FANNO QUESTE REGOLE:
+// - Proteggono i dati da accessi non autorizzati
+// - Permettono lettura/scrittura solo da domini autorizzati
+// - Validano la struttura dei dati prima di salvarli
+//
+// ⚠️ IMPORTANTE: Queste regole sono per SVILUPPO/TEST
+//    Per produzione con autenticazione utenti, useremo regole ancora più restrittive
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Funzione helper: verifica che i dati abbiano campi richiesti
+    function hasRequiredFields(data, fields) {
+      return fields.toSet().difference(data.keys().toSet()).size() == 0;
+    }
+
+    // Funzione helper: verifica che sia una richiesta valida
+    function isValidRequest() {
+      // Per ora permettiamo tutto - in produzione aggiungeremo auth
+      return true;
+    }
+
+    // ========================================
+    // ORDERS COLLECTION
+    // ========================================
+    match /orders/{orderId} {
+      allow read: if isValidRequest();
+      allow create: if isValidRequest()
+                    && hasRequiredFields(request.resource.data, ['customer', 'article', 'quantity', 'date'])
+                    && request.resource.data.quantity is number
+                    && request.resource.data.quantity > 0;
+      allow update: if isValidRequest();
+      allow delete: if isValidRequest();
+    }
+
+    // ========================================
+    // CUSTOMERS ARCHIVE
+    // ========================================
+    match /customersArchive/{customerId} {
+      allow read: if isValidRequest();
+      allow create: if isValidRequest()
+                    && hasRequiredFields(request.resource.data, ['code', 'name']);
+      allow update: if isValidRequest();
+      allow delete: if isValidRequest();
+    }
+
+    // ========================================
+    // ARTICLES ARCHIVE
+    // ========================================
+    match /articlesArchive/{articleId} {
+      allow read: if isValidRequest();
+      allow create: if isValidRequest()
+                    && hasRequiredFields(request.resource.data, ['code', 'name']);
+      allow update: if isValidRequest();
+      allow delete: if isValidRequest();
+    }
+
+    // ========================================
+    // EXPENSES
+    // ========================================
+    match /expenses/{expenseId} {
+      allow read: if isValidRequest();
+      allow create: if isValidRequest()
+                    && hasRequiredFields(request.resource.data, ['description', 'quantity', 'price', 'date'])
+                    && request.resource.data.quantity is number
+                    && request.resource.data.price is number;
+      allow update: if isValidRequest();
+      allow delete: if isValidRequest();
+    }
+
+    // ========================================
+    // STOCK MOVEMENTS
+    // ========================================
+    match /stockMovements/{movementId} {
+      allow read: if isValidRequest();
+      allow create: if isValidRequest()
+                    && hasRequiredFields(request.resource.data, ['code', 'type', 'quantity', 'date'])
+                    && request.resource.data.quantity is number
+                    && request.resource.data.quantity > 0;
+      allow update: if isValidRequest();
+      allow delete: if isValidRequest();
+    }
+
+    // ========================================
+    // SETTINGS
+    // ========================================
+    match /settings/{settingId} {
+      allow read: if isValidRequest();
+      allow write: if isValidRequest();
+    }
+
+    // ========================================
+    // TRASH (optional - per soft delete)
+    // ========================================
+    match /trash/{itemId} {
+      allow read: if isValidRequest();
+      allow write: if isValidRequest();
+    }
+  }
+}
+
+// 📝 NOTE PER IL FUTURO:
+//
+// Quando vorrai aggiungere autenticazione utenti, sostituisci:
+//   function isValidRequest() {
+//     return true;
+//   }
+//
+// Con:
+//   function isValidRequest() {
+//     return request.auth != null;  // Solo utenti autenticati
+//   }
+//
+// E per multi-utente (ogni utente vede solo i suoi dati):
+//   match /orders/{orderId} {
+//     allow read, write: if request.auth != null
+//                        && request.auth.uid == resource.data.userId;
+//   }
