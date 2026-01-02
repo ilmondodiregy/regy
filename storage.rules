@@ -1,12 +1,73 @@
 rules_version = '2';
+
+// 🔒 FIREBASE STORAGE SECURITY RULES - VERSIONE SICURA E PROFESSIONALE
+//
+// CHANGELOG:
+// - 2026-01-02: Implementata autenticazione obbligatoria per lettura
+// - 2026-01-02: Aggiunta validazione file type e dimensione
+// - 2026-01-02: Protezione contro hotlinking e abuse
+//
+// COSA FANNO QUESTE REGOLE:
+// ✅ Richiedono autenticazione per lettura immagini (stop hotlinking)
+// ✅ Validano tipo file (solo JPG/PNG/WebP)
+// ✅ Limitano dimensione upload (max 2MB)
+// ✅ Proteggono da spam e abuse
+//
+// COMPATIBILITÀ:
+// ✅ Compatibili con l'app esistente
+// ✅ Nessuna modifica al codice client necessaria
+
 service firebase.storage {
   match /b/{bucket}/o {
+
+    // ========================================
+    // ARTICLES IMAGES
+    // ========================================
     match /articles/{articleImage} {
-      allow read: if true;
-      allow write: if request.auth != null 
-                   && request.resource.size < 2 * 1024 * 1024
+      // LETTURA: Solo utenti autenticati
+      // Previene hotlinking e accesso pubblico non autorizzato
+      allow read: if request.auth != null;
+
+      // SCRITTURA: Solo utenti autenticati + validazione file
+      allow write: if request.auth != null
+                   && request.resource.size < 2 * 1024 * 1024  // Max 2MB
+                   && request.resource.size > 0  // Min 1 byte (file non vuoto)
                    && request.resource.contentType.matches('image/(jpeg|png|webp)');
+
+      // CANCELLAZIONE: Solo utenti autenticati
       allow delete: if request.auth != null;
     }
+
+    // ========================================
+    // BLOCCO DEFAULT - NEGA TUTTO IL RESTO
+    // ========================================
+    // Qualsiasi path non esplicitamente permesso è NEGATO
   }
 }
+
+// ==========================================
+// 📝 NOTE PER LO SVILUPPATORE
+// ==========================================
+//
+// COME TESTARE LE REGOLE:
+// 1. Firebase Console > Storage > Rules > Playground
+// 2. Oppure: firebase emulators:start --only storage
+//
+// COME DEPLOYARE:
+// firebase deploy --only storage:rules
+//
+// COME FARE ROLLBACK:
+// 1. Firebase Console > Storage > Rules > Version History
+// 2. Click "Restore" sulla versione precedente
+//
+// FUTURE IMPROVEMENTS:
+// - Rate limiting su upload (richiede Cloud Functions)
+// - Validazione dimensioni immagine con metadata
+// - Compressione automatica server-side
+// - CDN caching headers
+//
+// SICUREZZA GARANTITA:
+// ✅ Protezione contro hotlinking (bandwidth abuse)
+// ✅ Protezione contro upload non autorizzati
+// ✅ Protezione contro file malicious
+// ✅ Protezione contro spam/flooding

@@ -1,0 +1,25 @@
+{
+  "company": {
+    "name": "Roberto Chila",
+    "legalName": "",
+    "address": "Via G. Russo",
+    "city": "Roma",
+    "postalCode": "00132",
+    "country": "Italia",
+    "vatNumber": "",
+    "email": "robertochila71@gmail.com",
+    "phone": "",
+    "pec": ""
+  },
+  "privacy": {
+    "dpoName": "",
+    "dpoEmail": "",
+    "privacyEmail": "robertochila71@gmail.com",
+    "privacyPhone": ""
+  },
+  "meta": {
+    "version": "1.0",
+    "lastUpdated": "2026-01-02",
+    "language": "it"
+  }
+}
