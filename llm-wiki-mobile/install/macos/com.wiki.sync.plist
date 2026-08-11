@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  LaunchAgent per il sync del wiki su macOS.
+
+  Installazione:
+    cp com.wiki.sync.plist ~/Library/LaunchAgents/
+    # sostituisci UTENTE e il percorso del wiki
+    launchctl load ~/Library/LaunchAgents/com.wiki.sync.plist
+
+  Verifica:
+    launchctl list | grep wiki.sync
+    tail -f ~/wiki/.git/wiki-sync.log
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.wiki.sync</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/UTENTE/wiki/bin/wiki-sync.sh</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>WIKI_DIR</key>
+    <string>/Users/UTENTE/wiki</string>
+    <key>WIKI_QUIET_SECS</key>
+    <string>45</string>
+    <!-- launchd parte con un PATH minimo: senza questo git e python3
+         installati via Homebrew non vengono trovati e il sync fallisce in
+         silenzio. -->
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>StartInterval</key>
+  <integer>300</integer>
+
+  <!-- Un giro anche all'avvio: al risveglio del Mac e' il momento in cui e'
+       piu' probabile che il telefono abbia pushato qualcosa. -->
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/wiki-sync.out</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/wiki-sync.err</string>
+</dict>
+</plist>

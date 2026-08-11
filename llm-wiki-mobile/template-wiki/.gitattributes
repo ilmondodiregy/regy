@@ -1,0 +1,19 @@
+# log.md e' append-only e viene scritto dal PC, dalle sessioni Claude in cloud
+# e potenzialmente dal telefono. E' l'unico file che tutti toccano, quindi e'
+# il candidato naturale al conflitto.
+#
+# merge=union tiene entrambi i lati invece di fermarsi: due voci aggiunte in
+# parallelo sopravvivono tutte e due. E' corretto solo perche' il file e'
+# append-only — su un file che si riscrive, union produrrebbe spazzatura.
+# Gli eventuali duplicati li ripulisce `wiki-lint.py --fix`.
+wiki/log.md merge=union
+
+# Normalizza i fine riga in LF nel repository, comunque sia configurato il
+# client. Senza questo, un PC Windows puo' far apparire ogni riga di ogni file
+# come modificata, e da telefono si scaricherebbero diff enormi e inutili.
+* text=auto eol=lf
+
+# I markdown vanno sempre trattati come testo: se git li classificasse come
+# binari smetterebbe di fondere e ogni scrittura parallela diventerebbe un
+# conflitto.
+*.md text

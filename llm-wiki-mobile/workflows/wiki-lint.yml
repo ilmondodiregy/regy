@@ -1,0 +1,71 @@
+name: lint wiki
+
+# Guardia strutturale su ogni scrittura, da qualunque client arrivi: il PC,
+# Obsidian sul telefono, o una sessione Claude in cloud.
+#
+# Volutamente in sola lettura. Aggiungere un commit automatico qui
+# significherebbe introdurre un quarto scrittore sul repo, e il valore
+# dell'architettura sta proprio nel tenerne pochi e ben definiti. Qui si
+# verifica e si avvisa; a riparare ci pensa `/lint` da Claude.
+#
+# Non richiede segreti ne' chiavi API: e' solo Python della standard library.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'wiki/**'
+      - 'raw/**'
+      - 'bin/**'
+  pull_request:
+    paths:
+      - 'wiki/**'
+      - 'raw/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Lint strutturale
+        run: python3 bin/wiki-lint.py
+
+      - name: Catture in attesa di ingest
+        if: always()
+        run: |
+          # Non fa fallire nulla: e' un promemoria. Se questo numero cresce
+          # per giorni significa che le note prese dal telefono non stanno
+          # entrando nel wiki, cioe' che il ciclo si e' interrotto.
+          pending=$(python3 bin/wiki-lint.py --json \
+            | python3 -c "import json,sys; print(sum(1 for i in json.load(sys.stdin)['items'] if i['code']=='I001'))")
+          echo "Catture in attesa: $pending" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$pending" -gt 10 ]; then
+            echo "⚠️ Piu' di 10 catture non ingerite: lancia /ingest da Claude." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Peso del repo per Obsidian mobile
+        if: always()
+        run: |
+          # isomorphic-git, che e' quello che gira dentro Obsidian sul
+          # telefono, tiene in memoria molto piu' di git nativo. Un repo che
+          # cresce senza controllo smette di sincronizzarsi dal telefono, ed e'
+          # il modo piu' probabile in cui questo sistema si rompe col tempo.
+          size_kb=$(du -sk --exclude=.git . | cut -f1)
+          files=$(git ls-files | wc -l)
+          echo "Repo: ${size_kb} KB in ${files} file" >> "$GITHUB_STEP_SUMMARY"
+          big=$(git ls-files -z | xargs -0 -r ls -l 2>/dev/null | awk '$5 > 1048576 {print $5, $9}')
+          if [ -n "$big" ]; then
+            echo "⚠️ File oltre 1 MB (pesano sul sync mobile):" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "$big" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi

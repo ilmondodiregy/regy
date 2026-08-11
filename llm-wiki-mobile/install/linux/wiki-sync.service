@@ -1,0 +1,17 @@
+[Unit]
+Description=Sincronizza il wiki con il repo remoto
+Documentation=https://github.com/ilmondodiregy/regy/tree/main/llm-wiki-mobile
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Sostituisci il percorso con quello del tuo repo wiki.
+Environment=WIKI_DIR=%h/wiki
+Environment=WIKI_QUIET_SECS=45
+ExecStart=%h/wiki/bin/wiki-sync.sh
+
+# Il sync fallisce di continuo quando il portatile e' offline, ed e' normale:
+# lo script esce 0 in quel caso. Un exit diverso da 0 e' un problema vero, e
+# journalctl lo conserva.
+StandardOutput=journal
+StandardError=journal
