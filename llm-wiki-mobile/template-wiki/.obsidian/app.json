@@ -1,0 +1,16 @@
+{
+  "newFileLocation": "folder",
+  "newFileFolderPath": "raw/inbox",
+  "attachmentFolderPath": "raw/allegati",
+  "useMarkdownLinks": false,
+  "newLinkFormat": "shortest",
+  "alwaysUpdateLinks": true,
+  "showUnsupportedFiles": false,
+  "promptDelete": false,
+  "trashOption": "local",
+  "userIgnoreFilters": [
+    "bin/",
+    ".github/",
+    ".claude/"
+  ]
+}

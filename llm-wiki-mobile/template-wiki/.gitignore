@@ -1,0 +1,33 @@
+# --- Obsidian -------------------------------------------------------------
+# Questi file registrano quali pannelli hai aperto e dove, e cambiano a ogni
+# apertura dell'app su ogni dispositivo. Versionarli significa un conflitto
+# ogni volta che apri il vault sul telefono dopo averlo aperto sul PC: e'
+# quotidiano, non occasionale.
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.obsidian/graph.json
+
+# Contiene il token GitHub del plugin Git. Non deve finire nel repo, mai.
+.obsidian/plugins/obsidian-git/data.json
+
+# Il plugin ci scrive dentro quando incontra un conflitto: e' un file di
+# lavoro locale, non conoscenza.
+conflict-files-obsidian-git.md
+
+# Il resto di .obsidian/ resta versionato di proposito: cosi' le impostazioni
+# del vault (cartella di default delle note nuove, plugin, aspetto) sono le
+# stesse sul PC e sul telefono senza doverle rifare a mano.
+
+# --- Sistema operativo ----------------------------------------------------
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# --- Locale ---------------------------------------------------------------
+.wiki-sync.log
+*.tmp
+*.swp

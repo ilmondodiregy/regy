@@ -1,0 +1,17 @@
+[Unit]
+Description=Sincronizza il wiki ogni pochi minuti
+
+[Timer]
+# Primo giro poco dopo il login: e' il momento in cui e' piu' probabile che
+# il telefono abbia pushato qualcosa mentre il PC era spento.
+OnStartupSec=2min
+OnUnitActiveSec=5min
+
+# Persistent recupera i giri saltati mentre il PC era spento o sospeso:
+# senza questo, riaccendendo il portatile si aspetterebbero altri 5 minuti
+# prima di scoprire le catture arrivate dal telefono.
+Persistent=true
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target
